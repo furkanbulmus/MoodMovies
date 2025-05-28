@@ -1,0 +1,30 @@
+# node modülleri
+node_modules/
+
+# build çıktıları
+dist/
+build/
+
+# MacOS çöp dosyası
+.DS_Store
+
+# Log dosyaları
+*.log
+
+# Server'daki public dosyalar (genellikle build içerir)
+server/public/
+
+# Vite config dosyaları (herhangi bir uzantı dahil)
+vite.config.ts.*
+
+# Arşiv dosyaları
+*.tar.gz
+*.zip
+
+# IDE klasörleri
+.vscode/
+.idea/
+
+# Geçici sistem dosyaları
+*.swp
+*.swo
