@@ -18,6 +18,9 @@ export function useMovieRecommendations() {
     
     try {
       const loadedMovies = await parseMoviesCSV();
+      if (loadedMovies.length === 0) {
+        throw new Error('No movies loaded');
+      }
       setMovies(loadedMovies);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load movies');
@@ -38,23 +41,36 @@ export function useMovieRecommendations() {
       // Load movies if not already loaded
       let moviesToUse = movies;
       if (moviesToUse.length === 0) {
+        console.log('Loading movies...');
         moviesToUse = await parseMoviesCSV();
+        console.log('Movies loaded:', moviesToUse.length);
+        
+        if (moviesToUse.length === 0) {
+          throw new Error('Film verileri yüklenemedi. Lütfen sayfayı yenileyip tekrar deneyin.');
+        }
         setMovies(moviesToUse);
       }
       
       // Simulate processing time for better UX
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
+      console.log('Generating recommendations...');
       const recs = MoodAnalyzer.generateRecommendations(
         moviesToUse,
         userMoods,
         preference,
         limit
       );
+      console.log('Recommendations generated:', recs.length);
+
+      if (recs.length === 0) {
+        throw new Error('Seçtiğiniz ruh haline uygun film bulunamadı. Lütfen farklı ruh halleri seçin veya "Ruh Halimi Değiştir" seçeneğini deneyin.');
+      }
       
       setRecommendations(recs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate recommendations');
+      console.error('Recommendation error:', err);
+      setError(err instanceof Error ? err.message : 'Film önerileri oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +92,10 @@ export function useMovieRecommendations() {
         preference,
         currentCount + 10
       );
+
+      if (moreRecs.length === 0) {
+        throw new Error('No more recommendations available');
+      }
       
       setRecommendations(moreRecs);
     } catch (err) {

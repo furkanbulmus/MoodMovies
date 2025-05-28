@@ -3,6 +3,7 @@ import { useMovieRecommendations } from '@/hooks/use-movie-recommendations';
 import { MoodVector, MoodPreference } from '@/types/mood';
 import MovieCard from './movie-card';
 import { RotateCcw, Share2, Plus } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface RecommendationsProps {
   selectedMoods: MoodVector;
@@ -11,7 +12,19 @@ interface RecommendationsProps {
 }
 
 export default function Recommendations({ selectedMoods, moodPreference, onReset }: RecommendationsProps) {
-  const { recommendations, isLoading, error, loadMoreRecommendations } = useMovieRecommendations();
+  const { recommendations, isLoading, error, loadMoreRecommendations, generateRecommendations } = useMovieRecommendations();
+
+  // Komponent yüklendiğinde önerileri yeniden oluştur
+  useEffect(() => {
+    const loadRecommendations = async () => {
+      try {
+        await generateRecommendations(selectedMoods, moodPreference);
+      } catch (err) {
+        console.error('Failed to load recommendations:', err);
+      }
+    };
+    loadRecommendations();
+  }, [selectedMoods, moodPreference, generateRecommendations]);
 
   const handleLoadMore = () => {
     loadMoreRecommendations(selectedMoods, moodPreference, recommendations.length);
@@ -21,20 +34,20 @@ export default function Recommendations({ selectedMoods, moodPreference, onReset
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'MoodFlix Recommendations',
-          text: 'Check out my personalized movie recommendations based on my mood!',
+          title: 'MoodFlix Önerileri',
+          text: 'Ruh halime göre kişiselleştirilmiş film önerilerimi kontrol et!',
           url: window.location.href,
         });
       } catch (err) {
-        console.log('Share failed:', err);
+        console.log('Paylaşım başarısız:', err);
       }
     } else {
       // Fallback for browsers without Web Share API
       try {
         await navigator.clipboard.writeText(window.location.href);
-        alert('Link copied to clipboard!');
+        alert('Link panoya kopyalandı!');
       } catch (err) {
-        console.log('Copy failed:', err);
+        console.log('Kopyalama başarısız:', err);
       }
     }
   };
@@ -43,17 +56,17 @@ export default function Recommendations({ selectedMoods, moodPreference, onReset
     mood.charAt(0).toUpperCase() + mood.slice(1)
   ).join(', ');
 
-  const preferenceText = moodPreference === 'match' ? 'matching your mood' : 'to change your mood';
+  const preferenceText = moodPreference === 'match' ? 'ruh halinize uygun' : 'ruh halinizi değiştirecek';
 
   if (error) {
     return (
       <section className="py-12 px-4">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-4xl font-bold mb-4 text-red-500">Something went wrong</h2>
+          <h2 className="text-4xl font-bold mb-4 text-red-500">Bir şeyler yanlış gitti</h2>
           <p className="text-muted text-lg mb-8">{error}</p>
           <Button onClick={onReset} className="bg-netflix-red hover:bg-red-700">
             <RotateCcw className="mr-2" size={16} />
-            Try Again
+            Tekrar Dene
           </Button>
         </div>
       </section>
@@ -64,13 +77,13 @@ export default function Recommendations({ selectedMoods, moodPreference, onReset
     return (
       <section className="py-12 px-4">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-4xl font-bold mb-4">No recommendations found</h2>
+          <h2 className="text-4xl font-bold mb-4">Öneri Bulunamadı</h2>
           <p className="text-muted text-lg mb-8">
-            We couldn't find movies matching your criteria. Try different mood combinations.
+            Seçtiğiniz kriterlere uygun film bulamadık. Lütfen farklı ruh halleri seçin.
           </p>
           <Button onClick={onReset} className="bg-netflix-red hover:bg-red-700">
             <RotateCcw className="mr-2" size={16} />
-            Try Different Moods
+            Farklı Ruh Halleri Dene
           </Button>
         </div>
       </section>
@@ -81,9 +94,9 @@ export default function Recommendations({ selectedMoods, moodPreference, onReset
     <section className="py-12 px-4">
       <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">Your Movie Recommendations</h2>
+          <h2 className="text-4xl font-bold mb-4">Film Önerileriniz</h2>
           <p className="text-muted text-lg mb-6">
-            Based on your <span className="text-white font-medium">{moodNames}</span> mood, {preferenceText}
+            <span className="text-white font-medium">{moodNames}</span> ruh haliniz için {preferenceText} filmler
           </p>
           <div className="flex justify-center items-center space-x-4">
             <Button
@@ -92,7 +105,7 @@ export default function Recommendations({ selectedMoods, moodPreference, onReset
               className="text-netflix-red hover:text-red-400 transition-colors"
             >
               <RotateCcw className="mr-2" size={16} />
-              Try Different Moods
+              Farklı Ruh Halleri Dene
             </Button>
             <span className="text-gray-500">|</span>
             <Button
@@ -101,7 +114,7 @@ export default function Recommendations({ selectedMoods, moodPreference, onReset
               className="text-green-400 hover:text-green-300 transition-colors"
             >
               <Share2 className="mr-2" size={16} />
-              Share Results
+              Sonuçları Paylaş
             </Button>
           </div>
         </div>
@@ -124,12 +137,12 @@ export default function Recommendations({ selectedMoods, moodPreference, onReset
                 {isLoading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                    Loading...
+                    Yükleniyor...
                   </>
                 ) : (
                   <>
                     <Plus className="mr-2" size={16} />
-                    Load More Movies
+                    Daha Fazla Film Yükle
                   </>
                 )}
               </Button>

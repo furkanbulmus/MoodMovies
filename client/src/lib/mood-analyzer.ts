@@ -161,7 +161,13 @@ export class MoodAnalyzer {
     const tagScore = this.calculateTagScore(movie, userMoods);
     const qualityScore = this.calculateQualityScore(movie);
     
-    let moodRelevanceScore = (genreScore * 0.4) + (keywordScore * 0.3) + (tagScore * 0.3);
+    // Daha dengeli skor hesaplama
+    let moodRelevanceScore = (genreScore * 0.5) + (keywordScore * 0.3) + (tagScore * 0.2);
+    
+    // Eğer film kalitesi yüksekse, daha fazla ağırlık ver
+    if (qualityScore > 0.7) {
+      moodRelevanceScore = moodRelevanceScore * 0.7 + 0.3;
+    }
     
     // If user wants to change mood, invert the mood relevance but keep quality
     if (preference === 'change') {
@@ -169,7 +175,7 @@ export class MoodAnalyzer {
     }
     
     // Combine mood relevance with quality (weighted)
-    const finalScore = (moodRelevanceScore * 0.7) + (qualityScore * 0.3);
+    const finalScore = (moodRelevanceScore * 0.8) + (qualityScore * 0.2);
     
     return Math.min(1, Math.max(0, finalScore));
   }
@@ -184,9 +190,11 @@ export class MoodAnalyzer {
       return [];
     }
 
+    console.log('Generating recommendations for moods:', userMoods);
+    console.log('Total movies to process:', movies.length);
+
     const scoredMovies = movies.map(movie => {
       const similarityScore = this.calculateSimilarityScore(movie, userMoods, preference);
-      
       const matchReason = this.generateMatchReason(movie, userMoods, preference, similarityScore);
       
       return {
@@ -196,17 +204,20 @@ export class MoodAnalyzer {
       };
     });
 
-    return scoredMovies
-      .filter(movie => movie.similarityScore > 0.05) // Filter out very low scores
+    const filteredMovies = scoredMovies
+      .filter(movie => movie.similarityScore > 0.01) // Daha düşük eşik değeri
       .sort((a, b) => {
         // Primary sort by similarity score
-        if (Math.abs(a.similarityScore - b.similarityScore) > 0.05) {
+        if (Math.abs(a.similarityScore - b.similarityScore) > 0.01) {
           return b.similarityScore - a.similarityScore;
         }
         // Secondary sort by rating
         return b.vote_average - a.vote_average;
-      })
-      .slice(0, limit);
+      });
+
+    console.log('Filtered movies count:', filteredMovies.length);
+    
+    return filteredMovies.slice(0, limit);
   }
 
   private static generateMatchReason(

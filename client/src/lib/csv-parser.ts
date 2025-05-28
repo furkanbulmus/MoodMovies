@@ -49,16 +49,20 @@ let ratingsCache: Map<string, number[]> | null = null;
 
 export async function parseMoviesCSV(csvPath: string = '/movies_metadata.csv'): Promise<Movie[]> {
   if (moviesCache) {
+    console.log('Using cached movies:', moviesCache.length);
     return moviesCache;
   }
 
   try {
+    console.log('Fetching movies from:', csvPath);
     const response = await fetch(csvPath);
     if (!response.ok) {
-      throw new Error(`Failed to fetch CSV: ${response.statusText}`);
+      console.error('Movies CSV fetch failed:', response.status, response.statusText);
+      return [];
     }
     
     const csvText = await response.text();
+    console.log('CSV text loaded, length:', csvText.length);
     
     return new Promise((resolve, reject) => {
       Papa.parse<CSVMovie>(csvText, {
@@ -66,32 +70,43 @@ export async function parseMoviesCSV(csvPath: string = '/movies_metadata.csv'): 
         skipEmptyLines: true,
         complete: async (results) => {
           try {
+            console.log('CSV parsed, rows:', results.data.length);
+            
             // Load tags and ratings for enhanced recommendations
             const [tags, ratings] = await Promise.all([
-              parseTagsCSV(),
-              parseRatingsCSV()
+              parseTagsCSV().catch(err => {
+                console.warn('Tags loading failed:', err);
+                return new Map();
+              }),
+              parseRatingsCSV().catch(err => {
+                console.warn('Ratings loading failed:', err);
+                return new Map();
+              })
             ]);
 
+            console.log('Tags loaded:', tags.size);
+            console.log('Ratings loaded:', ratings.size);
+
             const movies: Movie[] = results.data
-              .filter(row => row.title && row.overview && row.genres)
-              .slice(0, 3000) // Limit for performance
+              .filter(row => row.title && row.genres)
+              .slice(0, 5000)
               .map(row => {
                 const movieId = row.id;
                 const movieTags = tags.get(movieId) || [];
                 const movieRatings = ratings.get(movieId) || [];
                 const avgRating = movieRatings.length > 0 
-                  ? movieRatings.reduce((sum, rating) => sum + rating, 0) / movieRatings.length 
+                  ? movieRatings.reduce((sum: number, rating: number) => sum + rating, 0) / movieRatings.length 
                   : parseFloat(row.vote_average) || 0;
 
                 return {
                   id: movieId,
                   title: row.title.trim(),
-                  overview: row.overview.trim(),
+                  overview: (row.overview || '').trim(),
                   genres: parseGenres(row.genres),
                   release_date: row.release_date || '',
                   vote_average: avgRating,
                   poster_path: row.poster_path,
-                  keywords: movieTags, // Use tags as keywords
+                  keywords: movieTags,
                   runtime: row.runtime ? parseFloat(row.runtime) : undefined,
                   tagline: row.tagline || '',
                   popularity: parseFloat(row.popularity) || 0,
@@ -100,23 +115,26 @@ export async function parseMoviesCSV(csvPath: string = '/movies_metadata.csv'): 
               })
               .filter(movie => 
                 movie.title.length > 0 && 
-                movie.overview.length > 5 && 
                 movie.genres.length > 0
               );
             
+            console.log('Final movies array:', movies.length);
             moviesCache = movies;
             resolve(movies);
           } catch (error: any) {
-            reject(new Error(`Failed to parse CSV data: ${error}`));
+            console.error('Error processing movie data:', error);
+            resolve([]);
           }
         },
         error: (error: any) => {
-          reject(new Error(`CSV parsing error: ${error.message}`));
+          console.error('CSV parsing error:', error);
+          resolve([]);
         }
       });
     });
   } catch (error: any) {
-    throw new Error(`Failed to load movies data: ${error}`);
+    console.error('Failed to load movies data:', error);
+    return [];
   }
 }
 
