@@ -68,7 +68,10 @@ export default function Home() {
       <header className="bg-netflix-dark/95 backdrop-blur-sm border-b border-gray-800 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            <div 
+              className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={handleReset}
+            >
               <Film className="text-netflix-red text-2xl" />
               <h1 className="text-2xl font-bold text-white">MoodFlix</h1>
             </div>
@@ -96,31 +99,30 @@ export default function Home() {
                   {/* First set of movies */}
                   {featuredMovies.map((movie, index) => (
                     <div 
-                      key={`first-${movie.id}`}
-                      className="flex-shrink-0 w-32 group cursor-pointer transform transition-all duration-300 hover:scale-105"
+                      key={`${movie.id}-${index}`}
+                      className="relative group w-32 flex-shrink-0"
                     >
-                      <div className="bg-card-dark rounded-lg overflow-hidden shadow-lg">
-                        <div className="relative">
-                          <img 
-                            src={movie.poster_path 
-                              ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
-                              : `https://via.placeholder.com/200x300/333333/ffffff?text=${encodeURIComponent(movie.title)}`
-                            }
-                            alt={`${movie.title} poster`}
-                            className="w-full h-40 object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = `https://via.placeholder.com/200x300/333333/ffffff?text=${encodeURIComponent(movie.title)}`;
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <div className="text-center p-1">
-                              <div className="flex items-center justify-center">
-                                <Star className="text-yellow-400 fill-current mr-1" size={12} />
-                                <span className="text-white text-xs font-medium">
-                                  {movie.vote_average.toFixed(1)}
-                                </span>
-                              </div>
+                      <div className="relative h-48 bg-card-dark rounded-lg overflow-hidden">
+                        <img 
+                          src={movie.poster_path 
+                            ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
+                            : `https://via.placeholder.com/200x300/1f1f1f/ffffff?text=${encodeURIComponent(movie.title)}`
+                          }
+                          alt={`${movie.title} poster`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = `https://via.placeholder.com/200x300/1f1f1f/ffffff?text=${encodeURIComponent(movie.title)}`;
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-2">
+                          <div className="text-center">
+                            <h3 className="text-white text-xs font-medium line-clamp-2 mb-1">{movie.title}</h3>
+                            <div className="flex items-center justify-center">
+                              <Star className="text-yellow-400 fill-current mr-1" size={12} />
+                              <span className="text-white text-xs font-medium">
+                                {movie.vote_average.toFixed(1)}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -130,31 +132,30 @@ export default function Home() {
                   {/* Duplicate set for seamless loop */}
                   {featuredMovies.map((movie, index) => (
                     <div 
-                      key={`second-${movie.id}`}
-                      className="flex-shrink-0 w-32 group cursor-pointer transform transition-all duration-300 hover:scale-105"
+                      key={`${movie.id}-${index}-duplicate`}
+                      className="relative group w-32 flex-shrink-0"
                     >
-                      <div className="bg-card-dark rounded-lg overflow-hidden shadow-lg">
-                        <div className="relative">
-                          <img 
-                            src={movie.poster_path 
-                              ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
-                              : `https://via.placeholder.com/200x300/333333/ffffff?text=${encodeURIComponent(movie.title)}`
-                            }
-                            alt={`${movie.title} poster`}
-                            className="w-full h-40 object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = `https://via.placeholder.com/200x300/333333/ffffff?text=${encodeURIComponent(movie.title)}`;
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-black bg-opacity-60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <div className="text-center p-1">
-                              <div className="flex items-center justify-center">
-                                <Star className="text-yellow-400 fill-current mr-1" size={12} />
-                                <span className="text-white text-xs font-medium">
-                                  {movie.vote_average.toFixed(1)}
-                                </span>
-                              </div>
+                      <div className="relative h-48 bg-card-dark rounded-lg overflow-hidden">
+                        <img 
+                          src={movie.poster_path 
+                            ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
+                            : `https://via.placeholder.com/200x300/1f1f1f/ffffff?text=${encodeURIComponent(movie.title)}`
+                          }
+                          alt={`${movie.title} poster`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = `https://via.placeholder.com/200x300/1f1f1f/ffffff?text=${encodeURIComponent(movie.title)}`;
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-2">
+                          <div className="text-center">
+                            <h3 className="text-white text-xs font-medium line-clamp-2 mb-1">{movie.title}</h3>
+                            <div className="flex items-center justify-center">
+                              <Star className="text-yellow-400 fill-current mr-1" size={12} />
+                              <span className="text-white text-xs font-medium">
+                                {movie.vote_average.toFixed(1)}
+                              </span>
                             </div>
                           </div>
                         </div>

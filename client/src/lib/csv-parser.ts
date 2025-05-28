@@ -89,7 +89,6 @@ export async function parseMoviesCSV(csvPath: string = '/movies_metadata.csv'): 
 
             const movies: Movie[] = results.data
               .filter(row => row.title && row.genres)
-              .slice(0, 5000)
               .map(row => {
                 const movieId = row.id;
                 const movieTags = tags.get(movieId) || [];
@@ -98,6 +97,19 @@ export async function parseMoviesCSV(csvPath: string = '/movies_metadata.csv'): 
                   ? movieRatings.reduce((sum: number, rating: number) => sum + rating, 0) / movieRatings.length 
                   : parseFloat(row.vote_average) || 0;
 
+                // Clean and validate poster path
+                let posterPath: string | undefined = row.poster_path;
+                if (posterPath) {
+                  // Remove any leading/trailing whitespace
+                  posterPath = posterPath.trim();
+                  // Remove any leading slashes
+                  posterPath = posterPath.replace(/^\/+/, '');
+                  // If path doesn't start with a valid TMDB path format, set to undefined
+                  if (!posterPath.match(/^[a-zA-Z0-9\/_-]+\.(jpg|jpeg|png)$/i)) {
+                    posterPath = undefined;
+                  }
+                }
+
                 return {
                   id: movieId,
                   title: row.title.trim(),
@@ -105,7 +117,7 @@ export async function parseMoviesCSV(csvPath: string = '/movies_metadata.csv'): 
                   genres: parseGenres(row.genres),
                   release_date: row.release_date || '',
                   vote_average: avgRating,
-                  poster_path: row.poster_path,
+                  poster_path: posterPath,
                   keywords: movieTags,
                   runtime: row.runtime ? parseFloat(row.runtime) : undefined,
                   tagline: row.tagline || '',
@@ -115,10 +127,13 @@ export async function parseMoviesCSV(csvPath: string = '/movies_metadata.csv'): 
               })
               .filter(movie => 
                 movie.title.length > 0 && 
-                movie.genres.length > 0
-              );
+                movie.genres.length > 0 &&
+                movie.vote_average >= 5.0 // Only include movies with decent ratings
+              )
+              .slice(0, 10000); // Increase the limit to 10000 movies
             
             console.log('Final movies array:', movies.length);
+            console.log('Movies with posters:', movies.filter(m => m.poster_path).length);
             moviesCache = movies;
             resolve(movies);
           } catch (error: any) {
